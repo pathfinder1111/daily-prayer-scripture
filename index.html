@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="A fresh prayer and Bible verse each day — warm, encouraging, and free to share.">
+<meta property="og:title" content="Daily Prayer & Scripture">
+<meta property="og:description" content="A new prayer and Bible verse, every morning.">
+<title>Daily Prayer & Scripture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-1: #fff5ec;
+    --bg-2: #ffe2c9;
+    --bg-3: #f4c9a8;
+    --card: rgba(255, 255, 255, 0.92);
+    --ink: #3b2a1d;
+    --ink-soft: #6b4d36;
+    --accent: #b56b3a;
+    --accent-soft: #e8b48d;
+    --line: rgba(123, 81, 49, 0.18);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: var(--ink);
+    min-height: 100vh;
+    background:
+      radial-gradient(at 20% 15%, var(--bg-2) 0%, transparent 55%),
+      radial-gradient(at 85% 85%, var(--bg-3) 0%, transparent 50%),
+      linear-gradient(180deg, var(--bg-1) 0%, #ffe9d4 100%);
+    background-attachment: fixed;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+    position: relative;
+  }
+  .bg-photo {
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0;
+    transition: opacity 1.4s ease-in-out;
+  }
+  .bg-photo.loaded { opacity: 1; }
+  .bg-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(180deg, rgba(20,14,8,0.30) 0%, rgba(20,14,8,0.55) 100%);
+    opacity: 0;
+    transition: opacity 1.4s ease-in-out;
+    pointer-events: none;
+  }
+  .bg-overlay.loaded { opacity: 1; }
+  body.photo-loaded .top .date { color: rgba(255,255,255,0.92); text-shadow: 0 1px 8px rgba(0,0,0,0.5); }
+  body.photo-loaded .top h1 { color: #ffffff; text-shadow: 0 2px 14px rgba(0,0,0,0.5); }
+  body.photo-loaded .footer { color: rgba(255,255,255,0.85); text-shadow: 0 1px 6px rgba(0,0,0,0.4); opacity: 1; }
+  .photo-credit {
+    position: fixed;
+    bottom: 10px;
+    right: 12px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.65);
+    text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 1.4s ease;
+  }
+  .photo-credit.loaded { opacity: 1; }
+  .photo-credit a { color: inherit; text-decoration: none; border-bottom: 1px dotted rgba(255,255,255,0.4); }
+  .wrap {
+    width: 100%;
+    max-width: 640px;
+  }
+  .top {
+    text-align: center;
+    margin-bottom: 24px;
+    color: var(--ink-soft);
+  }
+  .top .date {
+    font-size: 14px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .top h1 {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-weight: 500;
+    font-size: 38px;
+    margin: 6px 0 0;
+    color: var(--ink);
+    letter-spacing: 0.005em;
+  }
+  .card {
+    background: var(--card);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.6);
+    border-radius: 22px;
+    padding: 36px 32px 30px;
+    box-shadow: 0 30px 60px -30px rgba(120, 70, 30, 0.25),
+                0 2px 6px rgba(120, 70, 30, 0.06);
+  }
+  .theme {
+    display: inline-block;
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(229, 159, 110, 0.18);
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-weight: 600;
+    margin-bottom: 18px;
+  }
+  .greeting {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-style: italic;
+    color: var(--ink-soft);
+    font-size: 20px;
+    margin-bottom: 14px;
+  }
+  .prayer {
+    font-size: 17px;
+    color: var(--ink);
+    margin: 0 0 28px;
+  }
+  .verse-block {
+    border-top: 1px solid var(--line);
+    padding-top: 22px;
+    margin-top: 22px;
+  }
+  .verse {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 22px;
+    line-height: 1.45;
+    font-style: italic;
+    color: var(--ink);
+    margin: 0 0 12px;
+  }
+  .verse::before { content: "“"; color: var(--accent); margin-right: 2px; }
+  .verse::after { content: "”"; color: var(--accent); margin-left: 2px; }
+  .ref {
+    font-size: 14px;
+    letter-spacing: 0.04em;
+    color: var(--ink-soft);
+    font-weight: 500;
+  }
+  .ref .translation {
+    color: var(--accent);
+    font-weight: 600;
+    margin-left: 6px;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+  }
+  .closing {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-style: italic;
+    color: var(--ink-soft);
+    text-align: center;
+    margin-top: 28px;
+    font-size: 18px;
+  }
+  .actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 24px;
+    flex-wrap: wrap;
+  }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--accent-soft);
+    background: rgba(255,255,255,0.7);
+    color: var(--accent);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 9px 18px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .btn:hover {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+  .back-row {
+    text-align: center;
+    margin-top: 12px;
+    min-height: 22px;
+  }
+  .btn-link {
+    appearance: none;
+    background: transparent;
+    border: none;
+    color: var(--ink-soft);
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 4px 8px;
+    opacity: 0.75;
+    transition: opacity 0.2s ease;
+  }
+  .btn-link:hover { opacity: 1; text-decoration: underline; }
+  .btn-link[hidden] { display: none; }
+  .footer {
+    text-align: center;
+    margin-top: 28px;
+    color: var(--ink-soft);
+    font-size: 12px;
+    opacity: 0.7;
+  }
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--ink);
+    color: white;
+    padding: 10px 18px;
+    border-radius: 999px;
+    font-size: 13px;
+    opacity: 0;
+    transition: all 0.3s ease;
+    pointer-events: none;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  @media (max-width: 480px) {
+    .top h1 { font-size: 30px; }
+    .card { padding: 28px 22px 24px; border-radius: 18px; }
+    .verse { font-size: 19px; }
+    .prayer { font-size: 16px; }
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg-1: #1a1410;
+      --bg-2: #3a2818;
+      --bg-3: #4a3220;
+      --card: rgba(40, 28, 20, 0.7);
+      --ink: #f6e6d3;
+      --ink-soft: #c9a984;
+      --accent: #e8a877;
+      --accent-soft: #6b4a30;
+      --line: rgba(232, 168, 119, 0.18);
+    }
+    .btn { background: rgba(60,40,28,0.6); }
+  }
+</style>
+</head>
+<body>
+<div class="bg-photo" id="bgPhoto"></div>
+<div class="bg-overlay" id="bgOverlay"></div>
+<div class="wrap">
+  <div class="top">
+    <div class="date" id="date">—</div>
+    <h1>Daily Prayer &amp; Scripture</h1>
+  </div>
+  <div class="card">
+    <span class="theme" id="theme">—</span>
+    <div class="greeting" id="greeting">Good morning ☀️</div>
+    <p class="prayer" id="prayer">Loading...</p>
+    <div class="verse-block">
+      <p class="verse" id="verse"></p>
+      <div class="ref"><span id="ref"></span><span class="translation" id="translation"></span></div>
+    </div>
+    <div class="closing">God is good, all the time.</div>
+    <div class="actions">
+      <button class="btn" id="shuffleBtn">Shuffle</button>
+      <button class="btn" id="shareBtn">Share</button>
+      <button class="btn" id="copyBtn">Copy</button>
+    </div>
+    <div class="back-row">
+      <button class="btn-link" id="backToTodayBtn" hidden>← Back to today's prayer</button>
+    </div>
+  </div>
+  <div class="footer">A new prayer and verse each day. Page automatically refreshes daily.</div>
+</div>
+<div class="toast" id="toast">Copied to clipboard</div>
+<div class="photo-credit" id="photoCredit"></div>
+
+<script>
+// Curated bank of nature photos from Unsplash (license permits hotlinking).
+// Themes: mountains, waterfalls, streams/lakes, lush forests. Each entry includes
+// a credit so we can show attribution.
+const photos = [
+  { id: "1506905925346-21bda4d32df4", credit: "John Lee",       theme: "mountains" },
+  { id: "1464822759023-fed622ff2c3b", credit: "David Mark",     theme: "mountains" },
+  { id: "1469474968028-56623f02e42e", credit: "Kalen Emsley",   theme: "mountains" },
+  { id: "1486870591958-9b9d0d1dda99", credit: "Lukasz Szmigiel",theme: "mountains" },
+  { id: "1483728642387-6c3bdd6c93e5", credit: "Bailey Zindel",  theme: "mountains" },
+  { id: "1454496522488-7a8e488e8606", credit: "Joshua Earle",   theme: "mountains" },
+  { id: "1455218873509-8097305ee378", credit: "Mike Kotsch",    theme: "waterfalls" },
+  { id: "1432405972618-c60b0225b8f9", credit: "Daniel Roe",     theme: "waterfalls" },
+  { id: "1501785888041-af3ef285b470", credit: "Bailey Zindel",  theme: "waterfalls" },
+  { id: "1493246507139-91e8fad9978e", credit: "Casey Horner",   theme: "waterfalls" },
+  { id: "1476610182048-b716b8518aae", credit: "Casey Horner",   theme: "waterfalls" },
+  { id: "1502082553048-f009c37129b9", credit: "Marc Pell",      theme: "waterfalls" },
+  { id: "1490750967868-88aa4486c946", credit: "Joshua Earle",   theme: "streams" },
+  { id: "1426604966848-d7adac402bff", credit: "Tim Swaan",      theme: "streams" },
+  { id: "1418489098061-ce87b5dc3aee", credit: "Eberhard Grossgasteiger", theme: "streams" },
+  { id: "1470071459604-3b5ec3a7fe05", credit: "Robert Lukeman", theme: "streams" },
+  { id: "1429552077091-836152271555", credit: "Jeremy Bishop",  theme: "streams" },
+  { id: "1466692476868-aef1dfb1e735", credit: "Lukasz Szmigiel",theme: "streams" },
+  { id: "1441974231531-c6227db76b6e", credit: "Sergei Akulich", theme: "forests" },
+  { id: "1448375240586-882707db888b", credit: "Casey Horner",   theme: "forests" },
+  { id: "1418065460487-3e41a6c84dc5", credit: "Eberhard Grossgasteiger", theme: "forests" },
+  { id: "1473773508845-188df298d2d1", credit: "Imat Bagja Gumilar", theme: "forests" },
+  { id: "1444090542259-0af8fa96557e", credit: "Jachan DeVol",   theme: "forests" },
+  { id: "1542273917363-3b1817f69a2d", credit: "Ales Krivec",    theme: "forests" }
+];
+
+// Separate pool used ONLY by the Shuffle button. These entries are completely
+// distinct from the daily `entries` rotation, so nothing on the daily schedule
+// is spoiled by pressing Shuffle. Edit this array independently to grow the
+// bonus pool without affecting the date-based daily rotation.
+const shufflePool = [
+  { theme: "Be Still", prayer: "Lord, in the rush of today, help me pause. Let me be still long enough to remember who you are and that you are God of every detail. Amen.", verse: "He says, 'Be still, and know that I am God.'", ref: "Psalm 46:10", translation: "NIV" },
+  { theme: "Walking by Faith", prayer: "Father, when the road ahead is unclear, teach me to walk by faith and not by sight. Help me trust the next step even when I can't see the whole path. Amen.", verse: "For we live by faith, not by sight.", ref: "2 Corinthians 5:7", translation: "NIV" },
+  { theme: "All Things New", prayer: "God, thank you for being the one who makes all things new. Renew something in me today that has felt weary or worn. Amen.", verse: "He who was seated on the throne said, 'I am making everything new!'", ref: "Revelation 21:5", translation: "NIV" },
+  { theme: "Whatever Is True", prayer: "Lord, guard my mind today. Help me dwell on what is true and good, rather than what is fearful or false. Amen.", verse: "Fix your thoughts on what is true, and honorable, and right, and pure, and lovely, and admirable. Think about things that are excellent and worthy of praise.", ref: "Philippians 4:8", translation: "NLT" },
+  { theme: "Sure-Footed", prayer: "God, give me strength to walk where the ground feels uneven today. Make me steady and sure-footed in the heights and the lows. Amen.", verse: "The Sovereign Lord is my strength! He makes me as surefooted as a deer, able to tread upon the heights.", ref: "Habakkuk 3:19", translation: "NLT" },
+  { theme: "Heart's Desire", prayer: "Father, teach me to delight in you first, knowing that as I do, you shape my deepest desires to match yours. Amen.", verse: "Take delight in the Lord, and he will give you the desires of your heart.", ref: "Psalm 37:4", translation: "NIV" },
+  { theme: "Mustard Seed", prayer: "Lord, when my faith feels small, remind me that even mustard-seed faith placed in you is enough to move mountains. Amen.", verse: "If you have faith as small as a mustard seed, you can say to this mountain, 'Move from here to there,' and it will move. Nothing will be impossible for you.", ref: "Matthew 17:20", translation: "NIV" },
+  { theme: "Persistent Prayer", prayer: "Father, give me the patience to keep praying about the things on my heart. Help me trust that you hear me, every time. Amen.", verse: "One day Jesus told his disciples a story to show that they should always pray and never give up.", ref: "Luke 18:1", translation: "NLT" },
+  { theme: "Anchor of the Soul", prayer: "God, in the waves of today, be the anchor that holds my soul firm and secure. Amen.", verse: "We have this hope as an anchor for the soul, firm and secure.", ref: "Hebrews 6:19", translation: "NIV" },
+  { theme: "Living Water", prayer: "Jesus, fill me again with your living water. Let what you pour into me overflow to refresh someone else today. Amen.", verse: "But whoever drinks the water I give them will never thirst. Indeed, the water I give them will become in them a spring of water welling up to eternal life.", ref: "John 4:14", translation: "NIV" },
+  { theme: "Bread of Life", prayer: "Lord, you are the bread that satisfies what no other meal can fill. Feed my soul today and let me be content in you. Amen.", verse: "Then Jesus declared, 'I am the bread of life. Whoever comes to me will never go hungry, and whoever believes in me will never be thirsty.'", ref: "John 6:35", translation: "NIV" },
+  { theme: "True Vine", prayer: "Jesus, help me stay connected to you today. Let everything good in me flow from being rooted in you. Amen.", verse: "I am the vine; you are the branches. If you remain in me and I in you, you will bear much fruit; apart from me you can do nothing.", ref: "John 15:5", translation: "NIV" },
+  { theme: "My Light", prayer: "Father, whatever today brings, you are my light. Drive out fear and let me walk in courage, knowing you go with me. Amen.", verse: "The Lord is my light and my salvation—whom shall I fear? The Lord is the stronghold of my life—of whom shall I be afraid?", ref: "Psalm 27:1", translation: "NIV" },
+  { theme: "Walk Humbly", prayer: "Lord, help me walk humbly today—doing what's right, loving mercy, and keeping in step with you. Amen.", verse: "He has shown you, O mortal, what is good. And what does the Lord require of you? To act justly and to love mercy and to walk humbly with your God.", ref: "Micah 6:8", translation: "NIV" },
+  { theme: "Mountains Move", prayer: "Father, increase my belief today—not in my own strength, but in your power to move what seems immovable. Amen.", verse: "I tell you the truth, you can say to this mountain, 'May you be lifted up and thrown into the sea,' and it will happen. But you must really believe it will happen and have no doubt in your heart.", ref: "Mark 11:23", translation: "NLT" },
+  { theme: "Open Doors", prayer: "God, where you've opened a door for me, give me the courage to walk through it. Where one has closed, help me trust your reason. Amen.", verse: "I know all the things you do, and I have opened a door for you that no one can close.", ref: "Revelation 3:8", translation: "NLT" },
+  { theme: "Hidden in Christ", prayer: "Lord, when the world tries to shake my sense of self, remind me that my life is hidden with you. I am safe in your keeping. Amen.", verse: "For you died, and your life is now hidden with Christ in God.", ref: "Colossians 3:3", translation: "NIV" },
+  { theme: "Ask, Seek, Knock", prayer: "Father, today I'm asking, seeking, knocking. Thank you for being a Father who responds to those who come to you. Amen.", verse: "Ask and it will be given to you; seek and you will find; knock and the door will be opened to you.", ref: "Matthew 7:7", translation: "NIV" },
+  { theme: "Tender Mercies", prayer: "Lord, your tender mercies are not new today—they're ancient and reliable. Cover me again with them this morning. Amen.", verse: "Remember, O Lord, your compassion and unfailing love, which you have shown from long ages past.", ref: "Psalm 25:6", translation: "NLT" },
+  { theme: "Hiding Place", prayer: "God, you are my hiding place. Wrap me today in protection and the quiet song of your nearness. Amen.", verse: "You are my hiding place; you will protect me from trouble and surround me with songs of deliverance.", ref: "Psalm 32:7", translation: "NIV" },
+  { theme: "Gentle Whisper", prayer: "Father, tune my heart to your gentle whisper today. Quiet the loud and amplify the still small voice you use to lead. Amen.", verse: "And after the fire there was the sound of a gentle whisper.", ref: "1 Kings 19:12", translation: "NLT" },
+  { theme: "Plans Committed", prayer: "Lord, I commit what I'm doing today to you. Establish my steps, redirect them where needed, and let my work honor you. Amen.", verse: "Commit to the Lord whatever you do, and he will establish your plans.", ref: "Proverbs 16:3", translation: "NIV" },
+  { theme: "Beauty for Ashes", prayer: "God, you trade ashes for beauty. Where I've felt loss or grief, do that exchange in me again today. Amen.", verse: "To bestow on them a crown of beauty instead of ashes, the oil of joy instead of mourning, and a garment of praise instead of a spirit of despair.", ref: "Isaiah 61:3", translation: "NIV" },
+  { theme: "Daily Bread", prayer: "Father, give me what I need for today—no more, no less. Help me trust that tomorrow's bread will come tomorrow. Amen.", verse: "Give us today our daily bread.", ref: "Matthew 6:11", translation: "NIV" },
+  { theme: "New Heart", prayer: "Lord, soften any place in me that's grown hard. Give me a tender heart that beats with yours. Amen.", verse: "I will give you a new heart and put a new spirit in you; I will remove from you your heart of stone and give you a heart of flesh.", ref: "Ezekiel 36:26", translation: "NIV" },
+  { theme: "Stronger Together", prayer: "Father, thank you for the people who walk beside me. Help me show up for them as faithfully as they show up for me. Amen.", verse: "Two are better than one, because they have a good return for their labor.", ref: "Ecclesiastes 4:9", translation: "NIV" },
+  { theme: "Hidden Treasures", prayer: "God, open my eyes to the hidden treasures of today—the unexpected gifts, the quiet beauty, the lessons under the surface. Amen.", verse: "I will give you hidden treasures, riches stored in secret places, so that you may know that I am the Lord, the God of Israel, who summons you by name.", ref: "Isaiah 45:3", translation: "NIV" },
+  { theme: "Soul Refreshed", prayer: "Lord, refresh my soul this morning. Lead me along right paths and let me follow gladly. Amen.", verse: "He refreshes my soul. He guides me along the right paths for his name's sake.", ref: "Psalm 23:3", translation: "NIV" },
+  { theme: "Goodness Pursuing", prayer: "Father, thank you for goodness and love that chase me down—every day, not just the easy ones. Help me notice them. Amen.", verse: "Surely your goodness and love will follow me all the days of my life, and I will dwell in the house of the Lord forever.", ref: "Psalm 23:6", translation: "NIV" },
+  { theme: "Hope Anchored", prayer: "God, when hope feels risky, remind me that your love is poured out in me. My hope won't be wasted because it rests in you. Amen.", verse: "And hope does not put us to shame, because God's love has been poured out into our hearts through the Holy Spirit, who has been given to us.", ref: "Romans 5:5", translation: "NIV" },
+  { theme: "Sabbath Gift", prayer: "Jesus, teach me to receive rest as a gift, not a rule. Help me make space for the kind of pause you designed for me. Amen.", verse: "Then Jesus said to them, 'The Sabbath was made to meet the needs of people, and not people to meet the requirements of the Sabbath.'", ref: "Mark 2:27", translation: "NLT" },
+  { theme: "Goes Before", prayer: "Father, you go before me into today. I don't have to dread what's ahead—you're already there. Amen.", verse: "The Lord himself goes before you and will be with you; he will never leave you nor forsake you. Do not be afraid; do not be discouraged.", ref: "Deuteronomy 31:8", translation: "NIV" },
+  { theme: "Perfect Love", prayer: "Lord, where fear is loud in me, let your love be louder. Drive out anxiety with the certainty that I am loved. Amen.", verse: "There is no fear in love. But perfect love drives out fear.", ref: "1 John 4:18", translation: "NIV" },
+  { theme: "Patient Hope", prayer: "God, grow patient, confident hope in me today—the kind that waits well and doesn't lose heart. Amen.", verse: "We were given this hope when we were saved. But if we look forward to something we don't yet have, we must wait patiently and confidently.", ref: "Romans 8:24-25", translation: "NLT" },
+  { theme: "Pure Heart", prayer: "Father, create in me a pure heart today. Renew my spirit and steady me from the inside out. Amen.", verse: "Create in me a pure heart, O God, and renew a steadfast spirit within me.", ref: "Psalm 51:10", translation: "NIV" },
+  { theme: "Stand Firm", prayer: "Lord, today: alert in spirit, firm in faith, courageous in action, strong in your strength. Amen.", verse: "Be on your guard; stand firm in the faith; be courageous; be strong.", ref: "1 Corinthians 16:13", translation: "NIV" },
+  { theme: "Immanuel", prayer: "Jesus, Immanuel—God with us. Let that simple truth steady my whole day. Amen.", verse: "Look! The virgin will conceive a child! She will give birth to a son, and they will call him Immanuel, which means 'God is with us.'", ref: "Matthew 1:23", translation: "NLT" },
+  { theme: "Holding My Hand", prayer: "Father, take hold of my hand today. Lead me where I need to go and quiet the fear in me with the strength of your grip. Amen.", verse: "For I am the Lord your God who takes hold of your right hand and says to you, Do not fear; I will help you.", ref: "Isaiah 41:13", translation: "NIV" },
+  { theme: "Songs in the Night", prayer: "Lord, by day your love directs me; at night your song surrounds me. Thank you for being constant in both. Amen.", verse: "By day the Lord directs his love, at night his song is with me—a prayer to the God of my life.", ref: "Psalm 42:8", translation: "NIV" },
+  { theme: "Known by God", prayer: "God, when the day shakes my sense of who I am, remind me: you know those who are yours. I am known by you. Amen.", verse: "But God's truth stands firm like a foundation stone with this inscription: 'The Lord knows those who are his.'", ref: "2 Timothy 2:19", translation: "NLT" },
+  { theme: "Patient Spirit", prayer: "Lord, give me a patient spirit today. Slow me down before I react and let understanding grow in the space I create. Amen.", verse: "Whoever is patient has great understanding, but one who is quick-tempered displays folly.", ref: "Proverbs 14:29", translation: "NIV" },
+  { theme: "Cheerful Heart", prayer: "Father, lift my heart today. Let cheerfulness be medicine for me and a gift to someone who needs it. Amen.", verse: "A cheerful heart is good medicine, but a broken spirit saps a person's strength.", ref: "Proverbs 17:22", translation: "NLT" },
+  { theme: "Wise Company", prayer: "Lord, surround me with wise voices. Help me listen well and become a little wiser by walking with people who walk with you. Amen.", verse: "Walk with the wise and become wise, for a companion of fools suffers harm.", ref: "Proverbs 13:20", translation: "NIV" },
+  { theme: "Speaking Life", prayer: "God, my words carry weight. Help me speak life into the people I encounter today, not weariness or harm. Amen.", verse: "The tongue has the power of life and death, and those who love it will eat its fruit.", ref: "Proverbs 18:21", translation: "NIV" },
+  { theme: "Open Heart", prayer: "Father, open my heart today—to your voice, to the people around me, and to what you want to do in me. Amen.", verse: "The Lord opened her heart to respond to Paul's message.", ref: "Acts 16:14", translation: "NIV" }
+];
+
+const entries = [
+  { theme: "Gratitude", prayer: "Lord, thank you for the gift of this new day and for every blessing—seen and unseen—that you've placed in my life. Help me carry a thankful heart through every moment, noticing your goodness in both the small joys and the steady mercies. Amen.", verse: "Be thankful in all circumstances, for this is God's will for you who belong to Christ Jesus.", ref: "1 Thessalonians 5:18", translation: "NLT" },
+  { theme: "Peace", prayer: "Father, settle my restless heart with your peace today. When worries crowd in, remind me that you hold all things, and let your calm presence quiet the noise within me. Amen.", verse: "And the peace of God, which transcends all understanding, will guard your hearts and your minds in Christ Jesus.", ref: "Philippians 4:7", translation: "NIV" },
+  { theme: "Courage", prayer: "God, give me the courage to face today exactly as it comes—its challenges and its unknowns. Help me walk forward knowing you go before me and never leave my side. Amen.", verse: "Have I not commanded you? Be strong and courageous. Do not be afraid; do not be discouraged, for the Lord your God will be with you wherever you go.", ref: "Joshua 1:9", translation: "NIV" },
+  { theme: "Hope", prayer: "Lord, fill me with hope today, especially in the places where I've grown weary of waiting. Let my eyes look up, my heart stay open, and my trust rest in what you are still working to do. Amen.", verse: "May the God of hope fill you with all joy and peace as you trust in him, so that you may overflow with hope by the power of the Holy Spirit.", ref: "Romans 15:13", translation: "NIV" },
+  { theme: "Strength", prayer: "God, when my own strength runs low, renew me from the deeper well of yours. Carry me through what feels too heavy, and remind me that your power shines brightest in my weakest moments. Amen.", verse: "But those who hope in the Lord will renew their strength. They will soar on wings like eagles; they will run and not grow weary, they will walk and not be faint.", ref: "Isaiah 40:31", translation: "NIV" },
+  { theme: "Trust", prayer: "Father, I lay down what I can't control and choose to trust you with the outcome. Lead me one step at a time, and steady my heart when the path ahead isn't clear. Amen.", verse: "Trust in the Lord with all your heart; do not depend on your own understanding. Seek his will in all you do, and he will show you which path to take.", ref: "Proverbs 3:5-6", translation: "NLT" },
+  { theme: "Comfort", prayer: "Lord, draw close to anyone hurting today—including me, when I need it. Be the soft presence in the hard moments, and let your comfort flow through us to everyone we meet. Amen.", verse: "Praise be to the God and Father of our Lord Jesus Christ, the Father of compassion and the God of all comfort, who comforts us in all our troubles.", ref: "2 Corinthians 1:3-4", translation: "NIV" },
+  { theme: "Love", prayer: "God, fill me with your love so completely that it spills out in everything I do today. Help me to be patient, kind, and slow to take offense—especially with the people closest to me. Amen.", verse: "Love is patient and kind. Love is not jealous or boastful or proud or rude. It does not demand its own way.", ref: "1 Corinthians 13:4-5", translation: "NLT" },
+  { theme: "Joy", prayer: "Father, lift my spirit today with joy that doesn't depend on circumstances. Open my eyes to delight in the small wonders you've tucked into ordinary moments. Amen.", verse: "You make known to me the path of life; you will fill me with joy in your presence, with eternal pleasures at your right hand.", ref: "Psalm 16:11", translation: "NIV" },
+  { theme: "Forgiveness", prayer: "Lord, thank you for the freedom of being forgiven. Help me extend that same grace to the people I'm tempted to hold something against, and free me from the weight of any grudge. Amen.", verse: "But if we confess our sins to him, he is faithful and just to forgive us our sins and to cleanse us from all wickedness.", ref: "1 John 1:9", translation: "NLT" },
+  { theme: "Patience", prayer: "God, grow my patience today—with the slow moments, with the long waits, and with the people who try it. Use these in-between times to shape me into who you're making me to be. Amen.", verse: "Consider it pure joy, my brothers and sisters, whenever you face trials of many kinds, because you know that the testing of your faith produces perseverance.", ref: "James 1:2-3", translation: "NIV" },
+  { theme: "Wisdom", prayer: "Father, when I face decisions today, give me wisdom that goes beyond my own understanding. Help me pause, listen, and choose what is good and right in your eyes. Amen.", verse: "If any of you lacks wisdom, you should ask God, who gives generously to all without finding fault, and it will be given to you.", ref: "James 1:5", translation: "NIV" },
+  { theme: "Renewal", prayer: "Lord, breathe new life into the places that feel tired or stuck. Show me where you're already doing something new, and give me the courage to walk into it. Amen.", verse: "For I am about to do something new. See, I have already begun! Do you not see it? I will make a pathway through the wilderness.", ref: "Isaiah 43:19", translation: "NLT" },
+  { theme: "Faith", prayer: "God, strengthen my faith today, especially when I can't see the way forward. Help me trust your character even when I don't understand your timing. Amen.", verse: "Now faith is confidence in what we hope for and assurance about what we do not see.", ref: "Hebrews 11:1", translation: "NIV" },
+  { theme: "Grace", prayer: "Father, thank you for grace that meets me again every morning. Remind me that I don't have to earn your love, and help me carry that same grace to everyone I encounter. Amen.", verse: "My grace is sufficient for you, for my power is made perfect in weakness.", ref: "2 Corinthians 12:9", translation: "NIV" },
+  { theme: "Mercy", prayer: "Lord, your mercies are new every morning—including this one. Thank you for not keeping score, and help me show that same mercy to others today. Amen.", verse: "The faithful love of the Lord never ends! His mercies never cease. Great is his faithfulness; his mercies begin afresh each morning.", ref: "Lamentations 3:22-23", translation: "NLT" },
+  { theme: "Healing", prayer: "God, you are the healer of broken hearts and hidden wounds. Bring your gentle restoration to the places in me that still ache, and use me to bring comfort to others who hurt. Amen.", verse: "He heals the brokenhearted and binds up their wounds.", ref: "Psalm 147:3", translation: "NIV" },
+  { theme: "Guidance", prayer: "Father, lead me today in ways I can recognize. When the path branches, give me clarity; when I'm unsure, give me peace; and when I take a wrong turn, gently bring me back. Amen.", verse: "The Lord says, 'I will guide you along the best pathway for your life. I will advise you and watch over you.'", ref: "Psalm 32:8", translation: "NLT" },
+  { theme: "Provision", prayer: "Lord, thank you for meeting my needs in ways I sometimes don't even see. Help me trust your provision today and live with open hands—ready to receive and ready to give. Amen.", verse: "And my God will meet all your needs according to the riches of his glory in Christ Jesus.", ref: "Philippians 4:19", translation: "NIV" },
+  { theme: "Presence", prayer: "God, the best gift today is simply you with me. Help me notice your presence in conversations, in quiet moments, and in the rhythms of ordinary life. Amen.", verse: "I keep my eyes always on the Lord. With him at my right hand, I will not be shaken.", ref: "Psalm 16:8", translation: "NIV" },
+  { theme: "Rest", prayer: "Father, I bring you my tiredness—body, mind, and soul. Teach me to rest in you and to let go of what I was never meant to carry. Amen.", verse: "Then Jesus said, 'Come to me, all of you who are weary and carry heavy burdens, and I will give you rest.'", ref: "Matthew 11:28", translation: "NLT" },
+  { theme: "Identity", prayer: "Lord, root me today in who you say I am: chosen, loved, and called by name. Let that identity steady me when other voices try to define me differently. Amen.", verse: "But you are a chosen people, a royal priesthood, a holy nation, God's special possession, that you may declare the praises of him who called you out of darkness into his wonderful light.", ref: "1 Peter 2:9", translation: "NIV" },
+  { theme: "Kindness", prayer: "God, make me genuinely kind today—not just polite. Help me see the people around me as you see them, and let my words and actions reflect your gentleness. Amen.", verse: "Be kind and compassionate to one another, forgiving each other, just as in Christ God forgave you.", ref: "Ephesians 4:32", translation: "NIV" },
+  { theme: "Humility", prayer: "Father, keep my heart humble today. Help me lift others up, listen well, and remember that every good thing in me is your gift. Amen.", verse: "Don't be selfish; don't try to impress others. Be humble, thinking of others as better than yourselves.", ref: "Philippians 2:3", translation: "NLT" },
+  { theme: "Generosity", prayer: "Lord, open my hands and my heart to give freely today—of my time, my attention, my resources. Make me a cheerful giver, knowing everything I have comes from you. Amen.", verse: "Each of you should give what you have decided in your heart to give, not reluctantly or under compulsion, for God loves a cheerful giver.", ref: "2 Corinthians 9:7", translation: "NIV" },
+  { theme: "Perseverance", prayer: "God, when I want to give up, give me one more step. Strengthen me to keep going in the good work you've placed in front of me, even when results are slow. Amen.", verse: "Let us not become weary in doing good, for at the proper time we will reap a harvest if we do not give up.", ref: "Galatians 6:9", translation: "NIV" },
+  { theme: "Worry", prayer: "Father, take my worries about tomorrow and let me live well in today. Remind me that the future you've prepared is already covered by your love. Amen.", verse: "So don't worry about tomorrow, for tomorrow will bring its own worries. Today's trouble is enough for today.", ref: "Matthew 6:34", translation: "NLT" },
+  { theme: "Anxiety", prayer: "Lord, I'm handing you the anxious thoughts that keep circling. Replace them with the steady knowledge that I am held, watched over, and deeply cared for. Amen.", verse: "Cast all your anxiety on him because he cares for you.", ref: "1 Peter 5:7", translation: "NIV" },
+  { theme: "Light", prayer: "God, let your word be a light to my steps today. Show me what's true, lead me where I need to go, and shine into any place that feels dim. Amen.", verse: "Your word is a lamp for my feet, a light on my path.", ref: "Psalm 119:105", translation: "NIV" },
+  { theme: "New Day", prayer: "Father, thank you for this day you've made. I receive it as a gift and choose to rejoice in it, whatever it holds. Amen.", verse: "The Lord has done it this very day; let us rejoice today and be glad.", ref: "Psalm 118:24", translation: "NIV" },
+  { theme: "Father's Care", prayer: "Lord, when I'm tempted to think my needs are too small or too big, remind me that I am cared for. You watch over the birds; you watch over me. Amen.", verse: "Look at the birds. They don't plant or harvest or store food in barns, for your heavenly Father feeds them. And aren't you far more valuable to him than they are?", ref: "Matthew 6:26", translation: "NLT" },
+  { theme: "Family", prayer: "God, bless my family today—the ones I'm related to and the ones who feel like family. Help us love each other well and serve you together. Amen.", verse: "But as for me and my household, we will serve the Lord.", ref: "Joshua 24:15", translation: "NIV" },
+  { theme: "Friendship", prayer: "Father, thank you for the friends who love me at my best and stick around at my worst. Help me be that kind of friend to someone today. Amen.", verse: "A friend loves at all times, and a brother is born for a time of adversity.", ref: "Proverbs 17:17", translation: "NIV" },
+  { theme: "Words", prayer: "Lord, guard my words today. Let what comes out of my mouth bring life—not tear down—and make my speech a small kindness in someone's day. Amen.", verse: "Don't use foul or abusive language. Let everything you say be good and helpful, so that your words will be an encouragement to those who hear them.", ref: "Ephesians 4:29", translation: "NLT" },
+  { theme: "Listening", prayer: "God, slow me down to really listen today. Help me hear before I speak, understand before I respond, and notice what's underneath the words people say. Amen.", verse: "My dear brothers and sisters, take note of this: Everyone should be quick to listen, slow to speak and slow to become angry.", ref: "James 1:19", translation: "NIV" },
+  { theme: "Truth", prayer: "Father, root me in your truth today. Set me free from the lies I've believed about myself, about others, and about you. Amen.", verse: "Then you will know the truth, and the truth will set you free.", ref: "John 8:32", translation: "NIV" },
+  { theme: "Praise", prayer: "Lord, you are worthy of praise—for who you are, not just what you do. Let praise be the soundtrack of my heart today, even in the ordinary moments. Amen.", verse: "Let everything that has breath praise the Lord.", ref: "Psalm 150:6", translation: "NIV" },
+  { theme: "Worship", prayer: "God, I bow my heart before you this morning. You are my Maker, my Sustainer, and my joy. Let everything I do today be a form of worship. Amen.", verse: "Come, let us bow down in worship, let us kneel before the Lord our Maker.", ref: "Psalm 95:6", translation: "NIV" },
+  { theme: "Refuge", prayer: "Father, when life feels overwhelming, you are my safe place. Let me run to you, not away from you, in every storm. Amen.", verse: "God is our refuge and strength, an ever-present help in trouble.", ref: "Psalm 46:1", translation: "NIV" },
+  { theme: "Shepherd", prayer: "Lord, you are my shepherd. Lead me beside still waters, restore my soul, and help me follow your voice above all others today. Amen.", verse: "The Lord is my shepherd; I have all that I need.", ref: "Psalm 23:1", translation: "NLT" },
+  { theme: "Goodness", prayer: "God, give me eyes to see your goodness today—in this land, in this life, in this moment. I trust you are good even when circumstances are hard. Amen.", verse: "Yet I am confident I will see the Lord's goodness while I am here in the land of the living.", ref: "Psalm 27:13", translation: "NLT" },
+  { theme: "Faithfulness", prayer: "Father, thank you for being faithful even when I am not. Anchor me in that faithfulness today, and help me reflect a little of it to the people in my life. Amen.", verse: "Know therefore that the Lord your God is God; he is the faithful God, keeping his covenant of love to a thousand generations of those who love him and keep his commandments.", ref: "Deuteronomy 7:9", translation: "NIV" },
+  { theme: "Restoration", prayer: "Lord, you restore what's been lost and rebuild what's been broken. Bring restoration to the parts of my story that still need it, in your perfect timing. Amen.", verse: "The Lord says, 'I will give you back what you lost to the swarming locusts, the hopping locusts, the stripping locusts, and the cutting locusts.'", ref: "Joel 2:25", translation: "NLT" },
+  { theme: "Boldness", prayer: "God, make me bold today—not loud, but courageous in speaking truth, doing right, and loving freely. Take my hesitation and replace it with holy confidence. Amen.", verse: "Now, Lord, consider their threats and enable your servants to speak your word with great boldness.", ref: "Acts 4:29", translation: "NIV" },
+  { theme: "Purpose", prayer: "Father, thank you for plans that include me—plans for good and hope. Help me trust your timeline and walk faithfully in today's small assignments. Amen.", verse: "For I know the plans I have for you, declares the Lord, plans to prosper you and not to harm you, plans to give you hope and a future.", ref: "Jeremiah 29:11", translation: "NIV" },
+  { theme: "Calling", prayer: "Lord, you've made me on purpose and for a purpose. Open my eyes today to the good work you've already prepared for me to do. Amen.", verse: "For we are God's handiwork, created in Christ Jesus to do good works, which God prepared in advance for us to do.", ref: "Ephesians 2:10", translation: "NIV" },
+  { theme: "Surrender", prayer: "God, I surrender my plans, my preferences, and my will to you again today. Have your way in me; I trust your way is better. Amen.", verse: "And so, dear brothers and sisters, I plead with you to give your bodies to God because of all he has done for you. Let them be a living and holy sacrifice—the kind he will find acceptable.", ref: "Romans 12:1", translation: "NLT" },
+  { theme: "Confidence", prayer: "Father, I come to you not because I have it together, but because you invite me to. Thank you for grace I can approach with confidence. Amen.", verse: "Let us then approach God's throne of grace with confidence, so that we may receive mercy and find grace to help us in our time of need.", ref: "Hebrews 4:16", translation: "NIV" },
+  { theme: "Transformation", prayer: "Lord, transform me from the inside out. Renew my thinking, soften my reactions, and shape me into someone who looks a little more like Jesus each day. Amen.", verse: "Don't copy the behavior and customs of this world, but let God transform you into a new person by changing the way you think.", ref: "Romans 12:2", translation: "NLT" },
+  { theme: "Freedom", prayer: "God, where your Spirit is, there is freedom. Free me today from anything that keeps me from living fully, loving fully, and trusting fully. Amen.", verse: "Now the Lord is the Spirit, and where the Spirit of the Lord is, there is freedom.", ref: "2 Corinthians 3:17", translation: "NIV" },
+  { theme: "Belonging", prayer: "Father, thank you for calling me your own. When I forget who I belong to, whisper it back to me—loved, accepted, family. Amen.", verse: "The Spirit you received does not make you slaves, so that you live in fear again; rather, the Spirit you received brought about your adoption to sonship. And by him we cry, 'Abba, Father.'", ref: "Romans 8:15", translation: "NIV" },
+  { theme: "Eternal Life", prayer: "Lord, thank you for the gift of eternal life—and the abundant life you offer right now. Help me live today with eternity in view. Amen.", verse: "For God so loved the world that he gave his one and only Son, that whoever believes in him shall not perish but have eternal life.", ref: "John 3:16", translation: "NIV" },
+  { theme: "Power", prayer: "God, you can do far more than I can ask or imagine. Strengthen me with the power of your Spirit today, especially where I feel powerless. Amen.", verse: "Now to him who is able to do immeasurably more than all we ask or imagine, according to his power that is at work within us.", ref: "Ephesians 3:20", translation: "NIV" },
+  { theme: "Promises", prayer: "Father, your promises are 'yes' in Christ. When doubt creeps in, remind me what you've said, and help me stand on it. Amen.", verse: "For all of God's promises have been fulfilled in Christ with a resounding 'Yes!' And through Christ, our 'Amen' (which means 'Yes') ascends to God for his glory.", ref: "2 Corinthians 1:20", translation: "NLT" },
+  { theme: "Steadfastness", prayer: "Lord, when everything around me shifts, anchor me in you. Help me stand firm, keep going, and trust that no act of love or faithfulness is wasted. Amen.", verse: "Therefore, my dear brothers and sisters, stand firm. Let nothing move you. Always give yourselves fully to the work of the Lord, because you know that your labor in the Lord is not in vain.", ref: "1 Corinthians 15:58", translation: "NIV" },
+  { theme: "Contentment", prayer: "God, teach me the secret of contentment today—not because I have everything, but because I have you. Let my heart rest in enough. Amen.", verse: "I have learned the secret of being content in any and every situation, whether well fed or hungry, whether living in plenty or in want.", ref: "Philippians 4:12", translation: "NIV" },
+  { theme: "Compassion", prayer: "Father, soften my heart toward the hurting today. Give me eyes to see, ears to hear, and a willingness to step closer when I'd rather look away. Amen.", verse: "Therefore, as God's chosen people, holy and dearly loved, clothe yourselves with compassion, kindness, humility, gentleness and patience.", ref: "Colossians 3:12", translation: "NIV" },
+  { theme: "Unity", prayer: "Lord, where there is division around me—in my home, my work, my community—make me a bridge-builder. Help me keep peace where it is mine to keep. Amen.", verse: "Make every effort to keep the unity of the Spirit through the bond of peace.", ref: "Ephesians 4:3", translation: "NIV" },
+  { theme: "Reconciliation", prayer: "God, thank you for reconciling me to yourself. Help me carry that same ministry of reconciliation into my relationships today. Amen.", verse: "All this is from God, who reconciled us to himself through Christ and gave us the ministry of reconciliation.", ref: "2 Corinthians 5:18", translation: "NIV" },
+  { theme: "Morning Voice", prayer: "Father, in the morning I bring my voice to you. Hear my prayers, receive my hopes, and walk with me into whatever this day will hold. Amen.", verse: "In the morning, Lord, you hear my voice; in the morning I lay my requests before you and wait expectantly.", ref: "Psalm 5:3", translation: "NIV" },
+  { theme: "Servanthood", prayer: "Lord, you came not to be served but to serve. Shape my heart to look more like yours today—glad to lift others, quick to help, slow to seek credit. Amen.", verse: "For even the Son of Man did not come to be served, but to serve, and to give his life as a ransom for many.", ref: "Mark 10:45", translation: "NIV" },
+  { theme: "Discernment", prayer: "Father, give me discernment today—help me see what's true, choose what's best, and notice the difference between good and almost-good. Amen.", verse: "I pray that your love will overflow more and more, and that you will keep on growing in knowledge and understanding. For I want you to understand what really matters.", ref: "Philippians 1:9-10", translation: "NLT" },
+  { theme: "Letting Go", prayer: "God, I'm holding onto things I was never meant to carry. Take them—the worries, the regrets, the what-ifs—and let me trade them for the lightness of trust. Amen.", verse: "Cast your cares on the Lord and he will sustain you; he will never let the righteous be shaken.", ref: "Psalm 55:22", translation: "NIV" },
+  { theme: "Quiet Spirit", prayer: "Lord, give me a quiet spirit in a loud world. Help me speak less and listen more, and find peace in the simple, faithful work in front of me. Amen.", verse: "Make it your ambition to lead a quiet life: You should mind your own business and work with your hands.", ref: "1 Thessalonians 4:11", translation: "NIV" },
+  { theme: "Sabbath Rest", prayer: "Father, teach me to rest the way you designed—not just stopping, but truly receiving your gift of pause, presence, and worship. Amen.", verse: "Remember the Sabbath day by keeping it holy.", ref: "Exodus 20:8", translation: "NIV" },
+  { theme: "Unfailing Love", prayer: "Lord, let me hear of your unfailing love this morning. Show me the way I should walk, and let me trust you with every step. Amen.", verse: "Let me hear of your unfailing love each morning, for I am trusting you. Show me where to walk, for I give myself to you.", ref: "Psalm 143:8", translation: "NLT" },
+  { theme: "Endurance", prayer: "God, when the road feels long, give me the endurance to keep going. Help me lay down anything that slows me, and run the race you've set with steady hope. Amen.", verse: "Let us strip off every weight that slows us down, especially the sin that so easily trips us up. And let us run with endurance the race God has set before us.", ref: "Hebrews 12:1", translation: "NLT" },
+  { theme: "Friend in Jesus", prayer: "Jesus, thank you for calling me friend. Help me walk closely with you today—talking, listening, leaning in. Amen.", verse: "I no longer call you servants, because a servant does not know his master's business. Instead, I have called you friends.", ref: "John 15:15", translation: "NIV" },
+  { theme: "Salt and Light", prayer: "Father, let my life add flavor and shine light wherever I go today—gently, faithfully, without showing off. Amen.", verse: "You are the light of the world—like a city on a hilltop that cannot be hidden. Let your good deeds shine out for all to see, so that everyone will praise your heavenly Father.", ref: "Matthew 5:14,16", translation: "NLT" },
+  { theme: "Beloved", prayer: "Lord, remind me today that I am deeply loved—not for what I do, but for whose I am. Quiet my heart with that love. Amen.", verse: "For the Lord your God is living among you. He is a mighty savior. He will take delight in you with gladness. With his love, he will calm all your fears. He will rejoice over you with joyful songs.", ref: "Zephaniah 3:17", translation: "NLT" },
+  { theme: "Marriage", prayer: "God, bless the marriages and lifelong partnerships in our lives. Strengthen them with patience, honesty, and a love that grows deeper with time. Amen.", verse: "A person standing alone can be attacked and defeated, but two can stand back-to-back and conquer. Three are even better, for a triple-braided cord is not easily broken.", ref: "Ecclesiastes 4:12", translation: "NLT" },
+  { theme: "Children", prayer: "Father, thank you for the children in our lives—our own and the ones we know. Help us love them well, listen to them often, and point them toward you. Amen.", verse: "Children are a gift from the Lord; they are a reward from him.", ref: "Psalm 127:3", translation: "NLT" },
+  { theme: "Wonder", prayer: "Lord, give me eyes of wonder today. Help me notice your fingerprints—in skies, in faces, in unexpected moments—and respond with quiet awe. Amen.", verse: "When I consider your heavens, the work of your fingers, the moon and the stars, which you have set in place, what is mankind that you are mindful of them?", ref: "Psalm 8:3-4", translation: "NIV" },
+  { theme: "Creation", prayer: "God, thank you for the goodness of what you've made. Help me steward your creation with care and delight in its beauty today. Amen.", verse: "God saw all that he had made, and it was very good.", ref: "Genesis 1:31", translation: "NIV" },
+  { theme: "Stewardship", prayer: "Father, everything I have is yours. Help me use my time, gifts, and resources today in ways that serve others and honor you. Amen.", verse: "Each of you should use whatever gift you have received to serve others, as faithful stewards of God's grace in its various forms.", ref: "1 Peter 4:10", translation: "NIV" },
+  { theme: "Honesty", prayer: "Lord, make me truthful—in words, in promises, in the way I represent myself to others. Let my yes be yes and my no be no. Amen.", verse: "The Lord detests lying lips, but he delights in people who are trustworthy.", ref: "Proverbs 12:22", translation: "NIV" },
+  { theme: "Integrity", prayer: "God, keep my integrity intact today. Let what I do in private match what I do in public, and let my hope stay anchored in you. Amen.", verse: "May integrity and honesty protect me, for I put my hope in you.", ref: "Psalm 25:21", translation: "NIV" },
+  { theme: "Self-Control", prayer: "Father, grow self-control in me today—steady reactions, careful words, wise choices. Let your Spirit shape what comes out of me. Amen.", verse: "But the fruit of the Spirit is love, joy, peace, forbearance, kindness, goodness, faithfulness, gentleness and self-control.", ref: "Galatians 5:22-23", translation: "NIV" },
+  { theme: "Gentleness", prayer: "Lord, make me gentle today—gentle with myself, gentle with others, gentle even in disagreement. Let it be evident that you are near. Amen.", verse: "Let your gentleness be evident to all. The Lord is near.", ref: "Philippians 4:5", translation: "NIV" },
+  { theme: "No Condemnation", prayer: "God, free me today from the weight of past mistakes I keep rehearsing. There is no condemnation in Christ—let me actually live like it. Amen.", verse: "So now there is no condemnation for those who belong to Christ Jesus.", ref: "Romans 8:1", translation: "NLT" },
+  { theme: "Encouragement", prayer: "Father, make me an encourager today. Help me notice when someone needs a kind word, and give me the courage to say it. Amen.", verse: "Therefore encourage one another and build each other up, just as in fact you are doing.", ref: "1 Thessalonians 5:11", translation: "NIV" },
+  { theme: "Honoring Parents", prayer: "Lord, help me honor my parents—whether they are present, distant, complicated, or gone. Teach me to love them with grace and gratitude. Amen.", verse: "Honor your father and your mother, so that you may live long in the land the Lord your God is giving you.", ref: "Exodus 20:12", translation: "NIV" },
+  { theme: "Sacred Work", prayer: "God, let me work today as if working for you—with effort, with care, with joy in even the small tasks. Amen.", verse: "Work willingly at whatever you do, as though you were working for the Lord rather than for people.", ref: "Colossians 3:23", translation: "NLT" },
+  { theme: "Resilience", prayer: "Father, when the day feels pressed in, hold me up. Help me bend without breaking, knowing your strength runs underneath mine. Amen.", verse: "We are hard pressed on every side, but not crushed; perplexed, but not in despair; persecuted, but not abandoned; struck down, but not destroyed.", ref: "2 Corinthians 4:8-9", translation: "NIV" },
+  { theme: "Joy in Trials", prayer: "Lord, when this season tests me, deepen my joy in what doesn't change. Help me hold on, trusting that you're producing something good. Amen.", verse: "Blessed is the one who perseveres under trial because, having stood the test, that person will receive the crown of life.", ref: "James 1:12", translation: "NIV" },
+  { theme: "His Voice", prayer: "God, tune my ears to your voice today. Help me filter out the noise and follow your gentle lead. Amen.", verse: "My sheep listen to my voice; I know them, and they follow me.", ref: "John 10:27", translation: "NIV" },
+  { theme: "Solitude", prayer: "Father, draw me into quiet with you today, even if just for a few minutes. Let solitude restore what busyness has scattered. Amen.", verse: "Very early in the morning, while it was still dark, Jesus got up, left the house and went off to a solitary place, where he prayed.", ref: "Mark 1:35", translation: "NIV" },
+  { theme: "Constant Prayer", prayer: "Lord, teach me to pray without ceasing—turning my whole day into a quiet conversation with you. Amen.", verse: "Rejoice always, pray continually, give thanks in all circumstances; for this is God's will for you in Christ Jesus.", ref: "1 Thessalonians 5:16-18", translation: "NIV" },
+  { theme: "Carrying Burdens", prayer: "God, show me whose burden I'm meant to help carry today. Make me a friend who shows up, even when it's inconvenient. Amen.", verse: "Carry each other's burdens, and in this way you will fulfill the law of Christ.", ref: "Galatians 6:2", translation: "NIV" },
+  { theme: "Hospitality", prayer: "Father, open my home and my heart wider today. Help me welcome people the way you welcome me—generously, without strings. Amen.", verse: "Don't forget to show hospitality to strangers, for some who have done this have entertained angels without realizing it!", ref: "Hebrews 13:2", translation: "NLT" },
+  { theme: "Numbered Days", prayer: "Lord, teach me to count my days—not anxiously, but wisely. Let me invest this one well, in things that matter and will last. Amen.", verse: "Teach us to number our days, that we may gain a heart of wisdom.", ref: "Psalm 90:12", translation: "NIV" },
+  { theme: "Begin Again", prayer: "God, thank you that today I can begin again. Help me let go of what's behind and lean forward into the good you've prepared. Amen.", verse: "But one thing I do: Forgetting what is behind and straining toward what is ahead, I press on toward the goal to win the prize for which God has called me heavenward in Christ Jesus.", ref: "Philippians 3:13-14", translation: "NIV" },
+  { theme: "Following Jesus", prayer: "Jesus, lead the way today and I'll follow. Help me lay down my agenda and trust that yours is better. Amen.", verse: "If any of you wants to be my follower, you must give up your own way, take up your cross, and follow me.", ref: "Matthew 16:24", translation: "NLT" },
+  { theme: "Holy Spirit", prayer: "Father, thank you for the Holy Spirit—my Helper, my Teacher, my reminder of all that is true. Let me walk in step with him today. Amen.", verse: "But the Advocate, the Holy Spirit, whom the Father will send in my name, will teach you all things and will remind you of everything I have said to you.", ref: "John 14:26", translation: "NIV" },
+  { theme: "Heaven's Hope", prayer: "God, when this world feels heavy, lift my eyes toward the home you're preparing. Anchor me in the promise that one day all of this will be made right. Amen.", verse: "He will wipe every tear from their eyes. There will be no more death or mourning or crying or pain, for the old order of things has passed away.", ref: "Revelation 21:4", translation: "NIV" },
+  { theme: "Awe", prayer: "Lord, fill me with reverent awe today. You are mighty and merciful, far beyond me—and yet so near. Amen.", verse: "Let all the earth fear the Lord; let all the people of the world revere him.", ref: "Psalm 33:8", translation: "NIV" },
+  { theme: "New Song", prayer: "Father, put a song in my heart today—even a quiet one. Let praise rise from me whether life feels light or heavy. Amen.", verse: "Sing to the Lord a new song; sing to the Lord, all the earth.", ref: "Psalm 96:1", translation: "NIV" },
+  { theme: "Quiet Confidence", prayer: "Lord, in a world that rewards hustle, teach me the strength of quiet confidence. Let me find rest in returning to you. Amen.", verse: "Only in returning to me and resting in me will you be saved. In quietness and confidence is your strength.", ref: "Isaiah 30:15", translation: "NLT" },
+  { theme: "Coming Home", prayer: "Father, thank you that no matter how far I wander, you're already running toward me. Let me come home to you again today. Amen.", verse: "So he returned home to his father. And while he was still a long way off, his father saw him coming. Filled with love and compassion, he ran to his son, embraced him, and kissed him.", ref: "Luke 15:20", translation: "NLT" },
+  { theme: "Blessing Others", prayer: "Lord, make me a blessing today—in small kindnesses, sincere words, and quiet prayers for the people around me. Amen.", verse: "The Lord bless you and keep you; the Lord make his face shine on you and be gracious to you; the Lord turn his face toward you and give you peace.", ref: "Numbers 6:24-26", translation: "NIV" }
+];
+
+function dailyIndex() {
+  const today = new Date();
+  const y = today.getFullYear();
+  const m = today.getMonth() + 1;
+  const d = today.getDate();
+  // Deterministic hash so everyone sees the same entry on the same calendar date,
+  // but adjacent days hash to non-adjacent indexes for variety.
+  const key = `${y}-${m}-${d}`;
+  let h = 5381;
+  for (let i = 0; i < key.length; i++) {
+    h = ((h * 33) ^ key.charCodeAt(i)) >>> 0;
+  }
+  // Mix the year+dayOfYear in so consecutive days land far apart in the array.
+  const start = new Date(y, 0, 0);
+  const diff = today - start;
+  const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const idx = ((h ^ (dayOfYear * 2654435761)) >>> 0) % entries.length;
+  return idx;
+}
+
+function formatDate() {
+  const d = new Date();
+  return d.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h >= 5 && h < 12) return 'Good morning ☀️';
+  if (h >= 12 && h < 18) return 'Good afternoon 🌤️';
+  return 'Good evening 🌙';
+}
+
+// `currentEntry` is whatever's displayed right now — today's daily prayer by default,
+// or a shuffle-pool entry while the Shuffle button is in use. Share/Copy always act
+// on this value so they reflect what the visitor is actually looking at.
+let currentEntry = null;
+let lastShuffleIndex = -1;
+
+function applyEntry(e) {
+  document.getElementById('date').textContent = formatDate();
+  document.getElementById('theme').textContent = e.theme;
+  document.getElementById('greeting').textContent = getGreeting();
+  document.getElementById('prayer').textContent = e.prayer;
+  document.getElementById('verse').textContent = e.verse;
+  document.getElementById('ref').textContent = e.ref;
+  document.getElementById('translation').textContent = e.translation;
+  document.title = `${e.theme} · Daily Prayer & Scripture`;
+  currentEntry = e;
+}
+
+function render() {
+  // Render today's daily prayer (the date-based rotation). Always pulls from `entries`,
+  // never from `shufflePool`, so the daily schedule is untouched.
+  const e = entries[dailyIndex()];
+  applyEntry(e);
+  document.getElementById('backToTodayBtn').hidden = true;
+  lastShuffleIndex = -1;
+  return e;
+}
+
+function doShuffle() {
+  // Pick a random entry from the shuffle pool, avoiding an immediate repeat.
+  if (shufflePool.length === 0) return;
+  let idx;
+  if (shufflePool.length === 1) {
+    idx = 0;
+  } else {
+    do {
+      idx = Math.floor(Math.random() * shufflePool.length);
+    } while (idx === lastShuffleIndex);
+  }
+  lastShuffleIndex = idx;
+  applyEntry(shufflePool[idx]);
+  document.getElementById('backToTodayBtn').hidden = false;
+}
+
+function backToToday() {
+  render();
+}
+
+function plainText(e) {
+  return `${getGreeting()}\n\n${e.prayer}\n\n"${e.verse}"\n— ${e.ref} (${e.translation})\n\nGod is good, all the time.`;
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+const current = render();
+
+function dailyPhotoIndex() {
+  const today = new Date();
+  const y = today.getFullYear();
+  const m = today.getMonth() + 1;
+  const d = today.getDate();
+  // Independent hash so the photo and prayer rotate on different cycles.
+  const key = `photo:${y}-${m}-${d}`;
+  let h = 2166136261;
+  for (let i = 0; i < key.length; i++) {
+    h ^= key.charCodeAt(i);
+    h = (h * 16777619) >>> 0;
+  }
+  return h % photos.length;
+}
+
+function loadDailyPhoto() {
+  const p = photos[dailyPhotoIndex()];
+  const url = `https://images.unsplash.com/photo-${p.id}?auto=format&fit=crop&w=2000&q=80`;
+  const bgEl = document.getElementById('bgPhoto');
+  const overlayEl = document.getElementById('bgOverlay');
+  const creditEl = document.getElementById('photoCredit');
+  const img = new Image();
+  img.onload = () => {
+    bgEl.style.backgroundImage = `url("${url}")`;
+    bgEl.classList.add('loaded');
+    overlayEl.classList.add('loaded');
+    document.body.classList.add('photo-loaded');
+    creditEl.innerHTML =
+      `Photo by <a href="https://unsplash.com/photos/${p.id}" target="_blank" rel="noopener">${p.credit}</a> on <a href="https://unsplash.com/?utm_source=daily-prayer&utm_medium=referral" target="_blank" rel="noopener">Unsplash</a>`;
+    creditEl.classList.add('loaded');
+  };
+  img.onerror = () => {
+    // Image failed — keep the warm gradient fallback. Try the next photo in the bank.
+    const next = (dailyPhotoIndex() + 1) % photos.length;
+    if (next !== dailyPhotoIndex()) {
+      const fallback = photos[next];
+      const url2 = `https://images.unsplash.com/photo-${fallback.id}?auto=format&fit=crop&w=2000&q=80`;
+      const img2 = new Image();
+      img2.onload = () => {
+        bgEl.style.backgroundImage = `url("${url2}")`;
+        bgEl.classList.add('loaded');
+        overlayEl.classList.add('loaded');
+        document.body.classList.add('photo-loaded');
+        creditEl.innerHTML =
+          `Photo by <a href="https://unsplash.com/photos/${fallback.id}" target="_blank" rel="noopener">${fallback.credit}</a> on <a href="https://unsplash.com/?utm_source=daily-prayer&utm_medium=referral" target="_blank" rel="noopener">Unsplash</a>`;
+        creditEl.classList.add('loaded');
+      };
+      img2.src = url2;
+    }
+  };
+  img.src = url;
+}
+
+loadDailyPhoto();
+
+document.getElementById('copyBtn').addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(plainText(currentEntry));
+    toast('Copied to clipboard');
+  } catch {
+    toast('Copy failed');
+  }
+});
+
+document.getElementById('shareBtn').addEventListener('click', async () => {
+  const text = plainText(currentEntry);
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: 'Daily Prayer & Scripture', text });
+    } catch {}
+  } else {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast('Copied to clipboard');
+    } catch {
+      toast('Share not supported');
+    }
+  }
+});
+
+document.getElementById('shuffleBtn').addEventListener('click', doShuffle);
+document.getElementById('backToTodayBtn').addEventListener('click', backToToday);
+
+// Auto-refresh content if the page stays open across midnight or a greeting boundary.
+let lastIndex = dailyIndex();
+let lastPhoto = dailyPhotoIndex();
+let lastGreeting = getGreeting();
+setInterval(() => {
+  const now = dailyIndex();
+  const nowPhoto = dailyPhotoIndex();
+  const nowGreeting = getGreeting();
+  if (now !== lastIndex) {
+    lastIndex = now;
+    render();
+  }
+  if (nowGreeting !== lastGreeting) {
+    lastGreeting = nowGreeting;
+    document.getElementById('greeting').textContent = nowGreeting;
+  }
+  if (nowPhoto !== lastPhoto) {
+    lastPhoto = nowPhoto;
+    // Reset state and reload the photo for the new day.
+    document.getElementById('bgPhoto').classList.remove('loaded');
+    document.getElementById('bgOverlay').classList.remove('loaded');
+    document.getElementById('photoCredit').classList.remove('loaded');
+    document.body.classList.remove('photo-loaded');
+    loadDailyPhoto();
+  }
+}, 60 * 1000);
+</script>
+</body>
+</html>
