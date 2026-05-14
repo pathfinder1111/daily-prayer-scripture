@@ -196,6 +196,11 @@
     color: white;
     border-color: var(--accent);
   }
+  .btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
   .back-row {
     text-align: center;
     margin-top: 12px;
@@ -280,6 +285,7 @@
     </div>
     <div class="closing">God is good, all the time.</div>
     <div class="actions">
+      <button class="btn" id="prevDayBtn">← Previous day</button>
       <button class="btn" id="shuffleBtn">Shuffle</button>
       <button class="btn" id="shareBtn">Share</button>
       <button class="btn" id="copyBtn">Copy</button>
@@ -479,28 +485,30 @@ const entries = [
   { theme: "Blessing Others", prayer: "Lord, make me a blessing today—in small kindnesses, sincere words, and quiet prayers for the people around me. Amen.", verse: "The Lord bless you and keep you; the Lord make his face shine on you and be gracious to you; the Lord turn his face toward you and give you peace.", ref: "Numbers 6:24-26", translation: "NIV" }
 ];
 
-function dailyIndex() {
-  const today = new Date();
-  const y = today.getFullYear();
-  const m = today.getMonth() + 1;
-  const d = today.getDate();
+function dailyIndexForDate(date) {
   // Deterministic hash so everyone sees the same entry on the same calendar date,
-  // but adjacent days hash to non-adjacent indexes for variety.
+  // but adjacent days hash to non-adjacent indexes for variety. Pure function of
+  // the date — can be called for today, yesterday, any past day, etc.
+  const y = date.getFullYear();
+  const m = date.getMonth() + 1;
+  const d = date.getDate();
   const key = `${y}-${m}-${d}`;
   let h = 5381;
   for (let i = 0; i < key.length; i++) {
     h = ((h * 33) ^ key.charCodeAt(i)) >>> 0;
   }
-  // Mix the year+dayOfYear in so consecutive days land far apart in the array.
   const start = new Date(y, 0, 0);
-  const diff = today - start;
+  const diff = date - start;
   const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
-  const idx = ((h ^ (dayOfYear * 2654435761)) >>> 0) % entries.length;
-  return idx;
+  return ((h ^ (dayOfYear * 2654435761)) >>> 0) % entries.length;
 }
 
-function formatDate() {
-  const d = new Date();
+function dailyIndex() {
+  return dailyIndexForDate(new Date());
+}
+
+function formatDate(date) {
+  const d = date || new Date();
   return d.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 }
 
@@ -512,13 +520,23 @@ function getGreeting() {
 }
 
 // `currentEntry` is whatever's displayed right now — today's daily prayer by default,
-// or a shuffle-pool entry while the Shuffle button is in use. Share/Copy always act
-// on this value so they reflect what the visitor is actually looking at.
+// a shuffle-pool entry while Shuffle is in use, or a past day's daily prayer while
+// navigating with Previous day. Share/Copy always act on this value so they reflect
+// what the visitor is actually looking at.
 let currentEntry = null;
 let lastShuffleIndex = -1;
+// `dayOffset` tracks day-based navigation: 0 = today, -1 = yesterday, -2 = day before, etc.
+// Shuffle resets it to 0 (shuffle and previous-day are mutually exclusive views).
+let dayOffset = 0;
 
-function applyEntry(e) {
-  document.getElementById('date').textContent = formatDate();
+function getDisplayDate() {
+  const d = new Date();
+  d.setDate(d.getDate() + dayOffset);
+  return d;
+}
+
+function applyEntry(e, displayDate) {
+  document.getElementById('date').textContent = formatDate(displayDate);
   document.getElementById('theme').textContent = e.theme;
   document.getElementById('greeting').textContent = getGreeting();
   document.getElementById('prayer').textContent = e.prayer;
@@ -530,18 +548,30 @@ function applyEntry(e) {
 }
 
 function render() {
-  // Render today's daily prayer (the date-based rotation). Always pulls from `entries`,
-  // never from `shufflePool`, so the daily schedule is untouched.
-  const e = entries[dailyIndex()];
-  applyEntry(e);
-  document.getElementById('backToTodayBtn').hidden = true;
+  // Render the daily prayer for the currently-selected day (today by default,
+  // or yesterday if dayOffset is -1). Always pulls from `entries`, never from
+  // `shufflePool`, so the daily schedule remains intact.
+  const date = getDisplayDate();
+  const e = entries[dailyIndexForDate(date)];
+  applyEntry(e, date);
+  document.getElementById('backToTodayBtn').hidden = (dayOffset === 0);
+  document.getElementById('prevDayBtn').disabled = (dayOffset < 0);
   lastShuffleIndex = -1;
   return e;
+}
+
+function viewPreviousDay() {
+  // Visitors can step back exactly one day. Further presses do nothing — the
+  // button is disabled by render() once we're on yesterday.
+  if (dayOffset <= -1) return;
+  dayOffset = -1;
+  render();
 }
 
 function doShuffle() {
   // Pick a random entry from the shuffle pool, avoiding an immediate repeat.
   if (shufflePool.length === 0) return;
+  dayOffset = 0; // exit any past-day view — shuffle is its own state
   let idx;
   if (shufflePool.length === 1) {
     idx = 0;
@@ -551,11 +581,13 @@ function doShuffle() {
     } while (idx === lastShuffleIndex);
   }
   lastShuffleIndex = idx;
-  applyEntry(shufflePool[idx]);
+  applyEntry(shufflePool[idx]); // no date passed → defaults to today's date
   document.getElementById('backToTodayBtn').hidden = false;
+  document.getElementById('prevDayBtn').disabled = false; // re-enabled now that we're back at offset 0
 }
 
 function backToToday() {
+  dayOffset = 0;
   render();
 }
 
@@ -653,6 +685,7 @@ document.getElementById('shareBtn').addEventListener('click', async () => {
 });
 
 document.getElementById('shuffleBtn').addEventListener('click', doShuffle);
+document.getElementById('prevDayBtn').addEventListener('click', viewPreviousDay);
 document.getElementById('backToTodayBtn').addEventListener('click', backToToday);
 
 // Auto-refresh content if the page stays open across midnight or a greeting boundary.
