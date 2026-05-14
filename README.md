@@ -12,7 +12,7 @@ When `index.html` is opened in any modern browser, the page displays:
 - The closing line "God is good, all the time."
 - A full-bleed nature photograph as the background, with a soft dark overlay for legibility and a small photographer credit in the bottom-right corner.
 
-Three buttons under the card let visitors Shuffle (pull a different prayer from a separate bonus pool — see below), Share the current prayer (uses the native share sheet on mobile, falls back to clipboard on desktop), or Copy it as plain text suitable for pasting into a message. When the visitor has shuffled away from today's prayer, a subtle "← Back to today's prayer" link appears so they can return.
+Four buttons under the card let visitors revisit yesterday's prayer, Shuffle (pull a different prayer from a separate bonus pool — see below), Share the current prayer (uses the native share sheet on mobile, falls back to clipboard on desktop), or Copy it as plain text suitable for pasting into a message. The "← Previous day" button only steps back one day — once you're viewing yesterday it becomes disabled, so visitors can't keep browsing further into the archive. Whenever the visitor is viewing anything other than today's daily prayer (yesterday or a shuffled entry), a subtle "← Back to today's prayer" link appears so they can return in one tap.
 
 ## How the rotation works
 
