@@ -485,22 +485,42 @@ const entries = [
   { theme: "Blessing Others", prayer: "Lord, make me a blessing today—in small kindnesses, sincere words, and quiet prayers for the people around me. In Jesus' name, amen.", verse: "The Lord bless you and keep you; the Lord make his face shine on you and be gracious to you; the Lord turn his face toward you and give you peace.", ref: "Numbers 6:24-26", translation: "NIV" }
 ];
 
-function dailyIndexForDate(date) {
-  // Deterministic hash so everyone sees the same entry on the same calendar date,
-  // but adjacent days hash to non-adjacent indexes for variety. Pure function of
-  // the date — can be called for today, yesterday, any past day, etc.
-  const y = date.getFullYear();
-  const m = date.getMonth() + 1;
-  const d = date.getDate();
-  const key = `${y}-${m}-${d}`;
-  let h = 5381;
-  for (let i = 0; i < key.length; i++) {
-    h = ((h * 33) ^ key.charCodeAt(i)) >>> 0;
+// Build a year-specific shuffled permutation of [0..length-1] and walk it in order
+// by day-of-year. This GUARANTEES every entry appears exactly once before any
+// repeat (a hash-based picker would allow accidental clustering — different days
+// hashing to the same index just by chance).
+let _cachedPermYear = null;
+let _cachedPerm = null;
+function yearPermutation(year, length) {
+  if (_cachedPermYear === year && _cachedPerm && _cachedPerm.length === length) {
+    return _cachedPerm;
   }
+  const arr = Array.from({ length }, (_, i) => i);
+  // Tiny LCG seeded by the year — deterministic so everyone sees the same order.
+  let seed = (year * 2654435761) >>> 0;
+  function rng() {
+    seed = ((seed * 1103515245) + 12345) >>> 0;
+    return seed / 0x100000000;
+  }
+  for (let i = length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  _cachedPermYear = year;
+  _cachedPerm = arr;
+  return arr;
+}
+
+function dailyIndexForDate(date) {
+  // Collision-free daily selection: every entry shows exactly once per 100-day cycle,
+  // with the cycle order reshuffled each year. Pure function of the date — can be
+  // called for today, yesterday, or any past day.
+  const y = date.getFullYear();
   const start = new Date(y, 0, 0);
-  const diff = date - start;
-  const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
-  return ((h ^ (dayOfYear * 2654435761)) >>> 0) % entries.length;
+  const dayOfYear = Math.floor((date - start) / (1000 * 60 * 60 * 24));
+  const perm = yearPermutation(y, entries.length);
+  const i = ((dayOfYear % entries.length) + entries.length) % entries.length;
+  return perm[i];
 }
 
 function dailyIndex() {
